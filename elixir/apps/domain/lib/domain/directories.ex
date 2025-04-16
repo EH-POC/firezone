@@ -2,7 +2,6 @@ defmodule Domain.Directories do
   alias Domain.Repo
   alias Domain.Directories.Provider
   alias Domain.Accounts
-  alias Domain.Auth
 
   def fetch_provider_by_id(id) do
     Provider.Query.all()
@@ -10,14 +9,43 @@ defmodule Domain.Directories do
     |> Repo.fetch(Provider.Query)
   end
 
-  def create_provider(%Accounts.Account{} = account, %Auth.Provider{} = auth_provider, attrs) do
-    Provider.Changeset.create(account, auth_provider, attrs)
+  def list_providers_for_account(%Accounts.Account{} = account) do
+    Provider.Query.all()
+    |> Provider.Query.not_disabled()
+    |> Provider.Query.by_account(account)
+    |> Repo.list(Provider.Query)
+  end
+
+  def create_provider(%Accounts.Account{} = account, attrs) do
+    Provider.Changeset.create(account, attrs)
     |> Repo.insert()
   end
 
-  def update_provider(%Provider{} = provider, attrs) do
+  def disable_provider(%Provider{} = provider) do
     provider
-    |> Provider.Changeset.update(attrs)
+    |> Provider.Changeset.disable()
     |> Repo.update()
+  end
+
+  def enable_provider(%Provider{} = provider) do
+    provider
+    |> Provider.Changeset.enable()
+    |> Repo.update()
+  end
+
+  def rotate_provider_credentials(%Provider{} = provider, attrs) do
+    provider
+    |> Provider.Changeset.rotate_credentials(attrs)
+    |> Repo.update()
+  end
+
+  def update_provider_sync_state(%Provider{} = provider, attrs) do
+    provider
+    |> Provider.Changeset.update_sync_state(attrs)
+    |> Repo.update()
+  end
+
+  def delete_provider(%Provider{} = provider) do
+    Repo.delete(provider)
   end
 end

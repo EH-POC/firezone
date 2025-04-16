@@ -4,7 +4,13 @@ defmodule Domain.Fixtures.Directories do
 
   def create_okta_provider(attrs \\ %{}) do
     attrs =
-      %{type: :okta}
+      %{
+        type: :okta,
+        credentials: %{
+          client_id: "test_client_id",
+          private_key: "test_private_key"
+        }
+      }
       |> Map.merge(Enum.into(attrs, %{}))
 
     {account, attrs} =
@@ -12,13 +18,7 @@ defmodule Domain.Fixtures.Directories do
         Fixtures.Accounts.create_account(assoc_attrs)
       end)
 
-    {auth_provider, attrs} =
-      pop_assoc_fixture(attrs, :auth_provider, fn assoc_attrs ->
-        Fixtures.Auth.create_okta_provider(assoc_attrs)
-      end)
-
-    {:ok, provider} =
-      Directories.create_provider(account, auth_provider, attrs)
+    {:ok, provider} = Directories.create_provider(account, attrs)
 
     provider
   end
